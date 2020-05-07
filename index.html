@@ -15,11 +15,25 @@
       href="https://cdn.jsdelivr.net/npm/bulma@0.8.0/css/bulma.css"
       rel="stylesheet"
     />
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .register("/sw.js")
+          .then((reg) => {
+            console.log("votre service worker a été enregistré!");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      } else {
+        console.warn("Service workers are not supported.");
+      }
+    </script>
+
     <script src="./script.js"></script>
   </head>
   <body>
     <h1 class="title">Github Client</h1>
-    ]
     <div class="container"></div>
   </body>
 </html>
