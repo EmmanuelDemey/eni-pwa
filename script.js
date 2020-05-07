@@ -742,5 +742,5 @@ const json = [
 ];
 
 document.addEventListener("DOMContentLoaded", function() {
-  generateUI(json);
+  generateUI(json)
 });
