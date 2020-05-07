@@ -65,7 +65,6 @@ function generateUI(json){
 
   document.querySelector(".container").innerHTML = html;
 }
-
 const json = [
   {
     id: 66104863,
@@ -742,5 +741,8 @@ const json = [
 ];
 
 document.addEventListener("DOMContentLoaded", function() {
-  generateUI(json)
+  fetch("https://api.github.com/users/EmmanuelDemey/repos")
+	.then(response => response.json())
+    .then(json => generateUI(json));
+
 });
