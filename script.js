@@ -61,6 +61,15 @@ function generateUI(json){
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+  document.querySelector('.notification').setAttribute('hidden', !navigator.onLine);
+
+  window.addEventListener('online', () => {
+    document.querySelector('.notification').toggleAttribute('hidden');
+  });
+  window.addEventListener('offline', () => {
+    document.querySelector('.notification').toggleAttribute('hidden');
+  });
+  
   fetch("https://api.github.com/users/EmmanuelDemey/repos")
 	.then(response => response.json())
     .then(json => generateUI(json));
