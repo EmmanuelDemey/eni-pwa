@@ -11,18 +11,18 @@ function initFavorites() {
   let getFavorites;
   if (navigator.onLine) {
     getFavorites = fetch("http://localhost:3000/favorites")
-      .then(response => response.json())
-      .then(favorites => {
+      .then((response) => response.json())
+      .then((favorites) => {
         return localforage.setItem("favorites", favorites);
       });
   } else {
     getFavorites = localforage.getItem("favorites");
   }
   // GET all favories depuis l'url et indexedb
-  getFavorites.then(allFavorites => {
+  getFavorites.then((allFavorites) => {
     const favorites = allFavorites || [];
 
-    favorites.forEach(id => {
+    favorites.forEach((id) => {
       document
         .querySelector("[data-repo-id='" + id + "']")
         .classList.add("is-warning");
@@ -33,17 +33,17 @@ function initFavorites() {
 function initClickHandler() {
   const favorisButton = document.querySelectorAll("[data-repo-id]");
 
-  Array.from(favorisButton).forEach(link => {
-    link.addEventListener("click", function(event) {
+  Array.from(favorisButton).forEach((link) => {
+    link.addEventListener("click", function (event) {
       localforage
         .getItem("favorites")
-        .then(storedFavorites => {
+        .then((storedFavorites) => {
           const favorites = storedFavorites || [];
 
           const repoId = event.target.dataset.repoId;
           let newFavorites;
           if (event.target.classList.contains("is-warning")) {
-            newFavorites = favorites.filter(id => id !== repoId);
+            newFavorites = favorites.filter((id) => id !== repoId);
           } else {
             newFavorites = Array.from(new Set([...favorites, repoId]));
           }
@@ -52,19 +52,19 @@ function initClickHandler() {
             return fetch("http://localhost:3000/favorites", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(newFavorites)
+              body: JSON.stringify(newFavorites),
             });
           } else {
             // get from indexedb
             return localforage.setItem("favorites", newFavorites).then(() => {
               navigator.permissions
                 .query({
-                  name: "background-sync"
+                  name: "background-sync",
                 })
                 .then(({ state }) => {
                   console.log(state);
                   if (state === "granted") {
-                    return navigator.serviceWorker.ready.then(reg => {
+                    return navigator.serviceWorker.ready.then((reg) => {
                       return reg.sync.register("syncFavorites");
                     });
                   }
@@ -83,10 +83,10 @@ function generateUI(json) {
 
   let html = "";
 
-  chunks.forEach(chunk => {
+  chunks.forEach((chunk) => {
     html += '<div class="columns">';
 
-    chunk.forEach(repo => {
+    chunk.forEach((repo) => {
       html += `
             <div class="column">
             <div class="card">
@@ -139,26 +139,26 @@ function generateUI(json) {
   initClickHandler();
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   if (navigator.onLine) {
-    document.querySelector(".notification").removeAttribute("hidden");
+    document.querySelector(".notification").setAttribute("hidden", "");
   }
 
   window.addEventListener("online", () => {
-    document.querySelector(".notification").toggleAttribute("hidden");
+    document.querySelector(".notification").setAttribute("hidden", "");
   });
   window.addEventListener("offline", () => {
-    document.querySelector(".notification").toggleAttribute("hidden");
+    document.querySelector(".notification").removeAttribute("hidden");
   });
 
   let fetchData;
   if (navigator.onLine) {
     fetchData = fetch("https://api.github.com/users/EmmanuelDemey/repos")
-      .then(response => response.json())
-      .then(data => localforage.setItem("data", data));
+      .then((response) => response.json())
+      .then((data) => localforage.setItem("data", data));
   } else {
     fetchData = localforage.getItem("data");
   }
 
-  fetchData.then(json => generateUI(json));
+  fetchData.then((json) => generateUI(json));
 });
