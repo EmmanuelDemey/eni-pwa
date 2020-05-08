@@ -67,6 +67,7 @@ self.addEventListener("fetch", (event) => {
             description: j.description || "",
             updated_at: j.updated_at,
             avatar_url: j.owner.avatar_url,
+            html_url: j.html_url,
           }));
 
           return new Response(JSON.stringify(formattedResponse));
