@@ -87,6 +87,10 @@ self.addEventListener("sync", (event) => {
   if (event.tag === "syncFavorites") {
     console.log("Synchronisation en cours");
 
+    if (Notification.permission === "granted") {
+      registration.showNotification("Synchronisation en cours");
+    }
+
     event.waitUntil(
       localforage.getItem("favorites").then((favorites) => {
         return fetch("http://localhost:3000/favorites", {

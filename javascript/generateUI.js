@@ -57,6 +57,10 @@ function initClickHandler() {
                 .then(({ state }) => {
                   console.log(state);
                   if (state === "granted") {
+                    Notification.requestPermission(function (status) {
+                      console.log("Notification permission status:", status);
+                    });
+
                     return navigator.serviceWorker.ready.then((reg) => {
                       return reg.sync.register("syncFavorites");
                     });
