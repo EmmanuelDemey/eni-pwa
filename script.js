@@ -7,15 +7,86 @@ function chunkArray(array, size) {
 
 const dateTimeFormat = Intl.DateTimeFormat("fr");
 
+function initFavorites() {
+  let getFavorites;
+  if (navigator.onLine) {
+    getFavorites = fetch("http://localhost:3000/favorites")
+      .then(response => response.json())
+      .then(favorites => {
+        return localforage.setItem("favorites", favorites);
+      });
+  } else {
+    getFavorites = localforage.getItem("favorites");
+  }
+  // GET all favories depuis l'url et indexedb
+  getFavorites.then(allFavorites => {
+    const favorites = allFavorites || [];
+
+    favorites.forEach(id => {
+      document
+        .querySelector("[data-repo-id='" + id + "']")
+        .classList.add("is-warning");
+    });
+  });
+}
+
+function initClickHandler() {
+  const favorisButton = document.querySelectorAll("[data-repo-id]");
+
+  Array.from(favorisButton).forEach(link => {
+    link.addEventListener("click", function(event) {
+      localforage
+        .getItem("favorites")
+        .then(storedFavorites => {
+          const favorites = storedFavorites || [];
+
+          const repoId = event.target.dataset.repoId;
+          let newFavorites;
+          if (event.target.classList.contains("is-warning")) {
+            newFavorites = favorites.filter(id => id !== repoId);
+          } else {
+            newFavorites = Array.from(new Set([...favorites, repoId]));
+          }
+
+          if (navigator.onLine) {
+            return fetch("http://localhost:3000/favorites", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(newFavorites)
+            });
+          } else {
+            // get from indexedb
+            return localforage.setItem("favorites", newFavorites).then(() => {
+              navigator.permissions
+                .query({
+                  name: "background-sync"
+                })
+                .then(({ state }) => {
+                  console.log(state);
+                  if (state === "granted") {
+                    return navigator.serviceWorker.ready.then(reg => {
+                      return reg.sync.register("syncFavorites");
+                    });
+                  }
+                });
+            });
+          }
+        })
+        .then(() => {
+          event.target.classList.toggle("is-warning");
+        });
+    });
+  });
+}
 function generateUI(json) {
   const chunks = chunkArray(json, 3);
 
   let html = "";
 
-  chunks.forEach((chunk) => {
+  chunks.forEach(chunk => {
     html += '<div class="columns">';
 
-    chunk.forEach((repo) => {
+    chunk.forEach(repo => {
       html += `
             <div class="column">
             <div class="card">
@@ -39,6 +110,7 @@ function generateUI(json) {
                   </div>
                   <div class="media-content">
                     <p class="title is-4">${repo.name}</p>
+                    
                     <p class="subtitle is-6">@johnsmith</p>
                   </div>
                 </div>
@@ -49,6 +121,9 @@ function generateUI(json) {
                   Dernière mise à jour: <time datetime="${
                     repo.updated_at
                   }">${dateTimeFormat.format(new Date(repo.updated_at))}</time>
+                  <button class="button" data-repo-id="${repo.id}">
+                    Favori
+                  </button>
                 </div>
               </div>
             </div>
@@ -58,28 +133,32 @@ function generateUI(json) {
   });
 
   document.querySelector(".container").innerHTML = html;
+
+  initFavorites();
+
+  initClickHandler();
 }
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", function() {
   if (navigator.onLine) {
-    document.querySelector(".notification").setAttribute("hidden", "");
+    document.querySelector(".notification").removeAttribute("hidden");
   }
 
   window.addEventListener("online", () => {
-    document.querySelector(".notification").setAttribute("hidden", "");
+    document.querySelector(".notification").toggleAttribute("hidden");
   });
   window.addEventListener("offline", () => {
-    document.querySelector(".notification").removeAttribute("hidden");
+    document.querySelector(".notification").toggleAttribute("hidden");
   });
 
   let fetchData;
   if (navigator.onLine) {
     fetchData = fetch("https://api.github.com/users/EmmanuelDemey/repos")
-      .then((response) => response.json())
-      .then((data) => localforage.setItem("data", data));
+      .then(response => response.json())
+      .then(data => localforage.setItem("data", data));
   } else {
     fetchData = localforage.getItem("data");
   }
 
-  fetchData.then((json) => generateUI(json));
+  fetchData.then(json => generateUI(json));
 });
